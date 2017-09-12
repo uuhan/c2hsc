@@ -1,23 +1,23 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings  #-}
 
 module Data.C2Hsc where
 
 import           Control.Applicative
 import           Control.Logging
-import           Control.Monad hiding (sequence)
+import           Control.Monad                hiding (sequence)
 import           Control.Monad.Trans.State
 import           Data.Char
 import           Data.Data
 import           Data.Default
-import           Data.Foldable hiding (concat, elem, mapM_)
-import           Data.List as L
+import           Data.Foldable                hiding (concat, elem, mapM_)
+import           Data.List                    as L
 import           Data.List.Split
-import qualified Data.Map as M
+import qualified Data.Map                     as M
 import           Data.Maybe
 import           Data.Monoid
-import           Data.Text (pack)
-import           Data.Traversable hiding (mapM, forM)
+import           Data.Text                    (pack)
+import           Data.Traversable             hiding (forM, mapM)
 import           Debug.Trace
 import           Language.C.Data.Ident
 import           Language.C.Data.InputStream
@@ -28,25 +28,26 @@ import           Language.C.Pretty
 import           Language.C.Syntax.AST
 import           Language.C.System.GCC
 import           Language.C.System.Preprocess
-import           Prelude hiding (concat, sequence, mapM, mapM_, foldr)
+import           Prelude                      hiding (concat, foldr, mapM,
+                                               mapM_, sequence)
 import           System.Directory
 import           System.FilePath.Posix
 import           System.IO
 import           System.IO.Temp
-import           Text.PrettyPrint as P hiding ((<>))
+import           Text.PrettyPrint             as P hiding ((<>))
 import           Text.StringTemplate
 
 --import           Debug.Trace
 
 data C2HscOptions = C2HscOptions
-    { gcc          :: FilePath
-    , cppopts      :: [String]
-    , prefix       :: String
-    , filePrefix   :: [String]
-    , overrides    :: FilePath
-    , verbose      :: Bool
-    , debug        :: Bool
-    , files        :: [FilePath]
+    { gcc        :: FilePath
+    , cppopts    :: [String]
+    , prefix     :: String
+    , filePrefix :: [String]
+    , overrides  :: FilePath
+    , verbose    :: Bool
+    , debug      :: Bool
+    , files      :: [FilePath]
     }
     deriving (Data, Typeable, Show, Eq)
 
@@ -157,7 +158,7 @@ writeProducts opts fileName output omitHeader hscs helpercs = do
       target = cap ++ ".hsc"
 
   handle <- case output of
-      Just h -> return h
+      Just h  -> return h
       Nothing -> openFile target WriteMode
 
   hPutStrLn handle $ toString $ setManyAttrib vars code
@@ -180,7 +181,7 @@ writeProducts opts fileName output omitHeader hscs helpercs = do
   unless (null helpercs) $ do
     let targetc = cap ++ ".hsc.helper.c"
     handlec <- case output of
-        Just h -> return h
+        Just h  -> return h
         Nothing -> openFile targetc WriteMode
 
     hPutStrLn handlec "#include <bindings.cmacros.h>"
@@ -260,7 +261,7 @@ lookupType key = do
 parseCFile :: InputStream -> (FilePath -> Bool) -> Position -> Output ()
 parseCFile stream fm pos =
   case parseC stream pos of
-    Left err -> error $ "Failed to compile: " ++ show err
+    Left err                    -> error $ "Failed to compile: " ++ show err
     Right (CTranslUnit decls _) -> generateHsc decls
   where
     generateHsc :: [CExtDecl] -> Output ()
@@ -400,14 +401,14 @@ appendFunc marker declSpecs (CDeclr ident ddrs _ _ _) = do
     getArgTypes' _ = []
 
     nameFromIdent (Just (Ident n _ _)) = n
-    nameFromIdent _ = "<no name>"
+    nameFromIdent _                    = "<no name>"
 
     isFuncDeclr (CFunDeclr {}) = True
-    isFuncDeclr _ = False
+    isFuncDeclr _              = False
 
 structTagPrefix :: CStructTag -> String
 structTagPrefix CStructTag = "struct "
-structTagPrefix CUnionTag = "union "
+structTagPrefix CUnionTag  = "union "
 
 appendType :: [CDeclarationSpecifier a] -> String -> Output ()
 appendType declSpecs declrName = traverse_ appendType' declSpecs
@@ -444,7 +445,7 @@ appendType declSpecs declrName = traverse_ appendType' declSpecs
     appendType' _ = return ()
 
     identName pref ident = case ident of
-                        Nothing -> declrName
+                        Nothing             -> declrName
                         Just (Ident nm _ _) -> pref ++ nm
 
 -- The remainder of this file is some hairy code for turning various
@@ -598,7 +599,9 @@ qualToStr :: CTypeQualifier t -> String
 qualToStr (CConstQual _)  = "const"
 qualToStr (CVolatQual _)  = "volatile"
 qualToStr (CRestrQual _)  = "restricted"
-qualToStr (CInlineQual _) = ""
+qualToStr (CAtomicQual _) = ""
+qualToStr (CNullableQual _) = ""
+qualToStr (CNonnullQual _) = ""
 qualToStr (CAttrQual (CAttr (Ident n _ _) _ _)) =
   if n == "__gnu_inline__" then ""
                            else error $ "Unimplemented: attribute qualifiers"

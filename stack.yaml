@@ -1,0 +1,4 @@
+resolver: lts-9.4
+
+extra-deps:
+  - logging-3.0.4

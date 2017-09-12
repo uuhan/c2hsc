@@ -1,12 +1,13 @@
 module Main where
 
-import Control.Logging hiding (debug)
-import Control.Monad hiding (sequence)
-import Data.C2Hsc (C2HscOptions(..), runArgs)
-import Data.List as L
-import Prelude hiding (concat, sequence, mapM, mapM_, foldr)
-import System.Console.CmdArgs
-import System.Environment
+import           Control.Logging        hiding (debug)
+import           Control.Monad          hiding (sequence)
+import           Data.C2Hsc             (C2HscOptions (..), runArgs)
+import           Data.List              as L
+import           Prelude                hiding (concat, foldr, mapM, mapM_,
+                                         sequence)
+import           System.Console.CmdArgs
+import           System.Environment
 
 version :: String
 version = "0.7.0"
